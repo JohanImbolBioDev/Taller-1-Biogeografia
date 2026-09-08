@@ -188,13 +188,13 @@ dem_raster <- get_elev_raster(
 
 raster::writeRaster(
   dem_raster,
-  filename = "dem.tif",
+  filename = "Raster/demSedano.tif",
   format = "GTiff",
   overwrite = TRUE
 )
 
 # Convertir a SpatRaster para compatibilidad con tidyterra
-col_dem <- terra::rast("dem.tif")
+col_dem <- terra::rast("Raster/demSedano.tif")
 
 
 # 10. CONSTRUCCIÓN DEL MAPA (ggplot2)
