@@ -8,4 +8,6 @@
 **Fuente de datos**
 GBIF.org. (2026). GBIF Occurrence Data: Atelopus in Colombia. Global Biodiversity Information Facility. Disponible en: https://www.gbif.org [Accedido en septiembre de 2026]. 
 
-> Los datos fueron descargados utilizando [Descargar_abundancias.ipynb](https://ejemplo.com](https://github.com/JohanImbolBioDev/Taller-1-Biogeografia/blob/main/Descargar_abundancias.ipynb))
+> Los datos fueron descargados utilizando [Descargar_abundancias.ipynb](Descargar_abundancias.ipynb))
+
+> El mapa fue generado utilizando [Script_Atelopus.R](Script_Atelopus.R)
