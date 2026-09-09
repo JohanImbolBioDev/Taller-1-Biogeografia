@@ -230,7 +230,7 @@ print(map_plot)
 
 # EXPORTAR EL MAPA
 ggsave(
-  filename = "Mapas/mapa_Distribucion_ Atelopus.png",
+  filename = "Mapas/mapa_Distribucion_Atelopus.png",
   plot = map_plot,
   width = 7,
   height = 7,
