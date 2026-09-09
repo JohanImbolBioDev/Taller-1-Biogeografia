@@ -236,7 +236,7 @@ map_plot <- ggplot() +
     aes(
       x = X,
       y = Y,
-      label = admin
+      label = name_es
     ),
     size = 3.5,
     color = "black",
