@@ -1,3 +1,10 @@
+### TALLER PRÁCTICO: DEL DATO ESPACIAL AL MAPA
+# Autores: Johan Camilo Imbol Londoño (2327265) johan.imbol@correounivalle.edu.co
+#          Diana Margarita Parada Borja (2326313) diana.parada@correounivalle.edu.co
+# Fecha: Septiembre 09 de 2026
+
+# 0. DESCARGAR LIBRERIAS
+# Se descargan automaticamente las librerias necesarias que no estan instaladas
 necesarios <- c("dplyr", "ggplot2", "terra", "tidyterra", "rnaturalearthdata",
                 "rnaturalearth", "sf", "ggrepel", "ggspatial", "elevatr")
 faltan <- necesarios[!necesarios %in% rownames(installed.packages())]
@@ -5,11 +12,10 @@ faltan <- necesarios[!necesarios %in% rownames(installed.packages())]
 if (length(faltan) > 0) {
   problemas <- c(paste("Faltan paquetes:", paste(faltan, collapse = ", ")))
   cat("Paquetes faltantes:", paste(faltan, collapse = ", "), "\n")
+  install.packages(faltan)
 } else {
   cat("Paquetes: todos instalados\n")
 }
-
-install.packages(faltan)
 
 
 # 1. CARGAR LIBRERÍAS
@@ -24,7 +30,6 @@ library(ggspatial)
 library(elevatr)
 
 # 2. CARGAR DATOS DE OCURRENCIA
-
 sp <- read.csv("Datos/registros_atelopus_colombia.csv", sep = ",", header = T)
 
 
@@ -33,9 +38,12 @@ sum(is.na(sp$decimalLongitude))
 sum(is.na(sp$decimalLatitude))
 sum(is.na(sp$year))
 
+#año minimo y maximo de ocurrencia
+min(sp$year)
+max(sp$year)
 
 
-# Eliminar registros que no tengan coordenadas
+# Eliminar registros que no tengan coordenadas y que no tengan información del año de observación
 sp <- sp %>%
   filter(
     !is.na(decimalLongitude),
@@ -44,17 +52,17 @@ sp <- sp %>%
   )
 
 
-# 4. DEFINIR LA ESPECIE
+# 4. SE DEFINE EL GENERO DE ESTUDIO
 genus_name <- "Atelopus"
 
-# 5. DEFINIR LA REGIÓN DE TRABAJO
+# 5.REGIÓN DE TRABAJO
 
 countries <- ne_countries(
   country = c(
     "Colombia",
     "Ecuador",
     "Peru",
-    "Bolivia",
+    "Brazil",
     "Venezuela",
     "Panama"
   ),
@@ -62,17 +70,26 @@ countries <- ne_countries(
   scale = "medium"
 )
 
-
 #6. ETIQUETAS DE PAÍSES
 labels <- st_centroid(countries) %>%
   cbind(st_coordinates(.))
 
-# 7. DEFINIR LA EXTENSIÓN GEOGRÁFICA DEL MAPA
+# Cambio de coordenadas de Colombia para que no oculte los registros en el mapa
+# y que todas las etiquetas aparezcan en el mapa
+labels$X[labels$admin == "Colombia"] <- -72     
+labels$Y[labels$admin == "Colombia"] <- 3.7
+
+labels$X[labels$admin == "Brazil"] <- -67
+labels$Y[labels$admin == "Brazil"] <- -2.5
+
+labels$Y[labels$admin == "Peru"] <- -3.0
+
+# 7. EXTENSIÓN GEOGRÁFICA DEL MAPA
 map_xlim <- c(-82, -65)
-map_ylim <- c(-8, 15)
+map_ylim <- c(-5, 15)
 
 
-# 8. DEFINIR LA VENTANA PARA DESCARGAR LA ELEVACIÓN
+# 8. DESCARGAR LA ELEVACIÓN
 
 bbox_area <- st_as_sf(
   st_sfc(
@@ -87,7 +104,7 @@ bbox_area <- st_as_sf(
         )
       )
     ),
-    crs = 4326
+    crs = 4326 # Referencia de coordenadas WGS84 (EPSG:4326)
   )
 )
 
@@ -99,7 +116,7 @@ dem_raster <- get_elev_raster(
   clip = "bbox"
 )
 
-
+# GUARDAR MODELO DE ELEVACIÓN
 raster::writeRaster(
   dem_raster,
   filename = "Raster/Atelopus.tif",
@@ -110,6 +127,8 @@ raster::writeRaster(
 # Convertir a SpatRaster para compatibilidad con tidyterra
 col_dem <- terra::rast("Raster/Atelopus.tif")
 
+# Eliminar elevaciones por debajo de los 0 metros de altura
+col_dem[col_dem < 0] <- NA
 
 # 10. CONSTRUCCIÓN DEL MAPA (ggplot2)
 # ------------------------------------------------------------------------------
@@ -117,10 +136,12 @@ col_dem <- terra::rast("Raster/Atelopus.tif")
 map_plot <- ggplot() +
   
   # CAPA 1: MODELO DIGITAL DE ELEVACIÓN
-  geom_spatraster(data = col_dem) +
-  scale_fill_viridis_c(
+ geom_spatraster(data = col_dem) +
+ # Escala de grises para la elevación
+  scale_fill_gradient(
     name = "Elevación (m)",
-    option = "terrain",
+    low = "white",
+    high = "black",
     na.value = "transparent"
   ) +
   
@@ -140,10 +161,15 @@ map_plot <- ggplot() +
       y = decimalLatitude,
       color = year
     ),
-    size = 1.8,
-    alpha = 0.8,
+    size = 0.9,
+    alpha = 0.9,
     show.legend = T
-  ) + scale_color_viridis_c(option = "plasma") +
+  ) + 
+  
+  scale_color_viridis_c(
+  name = "Año de observación",
+  option = "viridis"
+ ) +
   
   # CAPA 4: NOMBRES DE LOS PAÍSES
   geom_text_repel(
@@ -151,11 +177,9 @@ map_plot <- ggplot() +
     aes(
       x = X,
       y = Y,
-      label = admin
-    ),
-    size = 3.5,
-    color = "black",
-    fontface = "bold"
+      label = name_es,
+      fontface = ifelse(admin == "Colombia", "bold", "italic"), # Negrilla para Colombia y cursiva para los demas
+    )
   ) +
   
   # ELEMENTOS CARTOGRÁFICOS: ESCALA Y NORTE
@@ -200,9 +224,11 @@ map_plot <- ggplot() +
     )
   )
 
+#Mostrar mapa
+print(map_plot)
+
 
 # EXPORTAR EL MAPA
-
 ggsave(
   filename = "Mapas/mapa_Distribucion_ Atelopus.png",
   plot = map_plot,
@@ -211,6 +237,7 @@ ggsave(
   units = "in",
   dpi = 300
 )
+
 
 
 
