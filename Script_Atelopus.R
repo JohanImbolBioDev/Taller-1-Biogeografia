@@ -3,8 +3,8 @@
 #          Diana Margarita Parada Borja (2326313) diana.parada@correounivalle.edu.co
 # Fecha: Septiembre 09 de 2026
 
-# 0. DESCARGAR LIBRERIAS
-# Se descargan automaticamente las librerias necesarias que no estan instaladas
+# 0. DESCARGAR LIBRERÍAS
+# Se descargan automáticamente las librerías necesarias que no están instaladas
 necesarios <- c("dplyr", "ggplot2", "terra", "tidyterra", "rnaturalearthdata",
                 "rnaturalearth", "sf", "ggrepel", "ggspatial", "elevatr")
 faltan <- necesarios[!necesarios %in% rownames(installed.packages())]
@@ -38,7 +38,7 @@ sum(is.na(sp$decimalLongitude))
 sum(is.na(sp$decimalLatitude))
 sum(is.na(sp$year))
 
-#año minimo y maximo de ocurrencia
+#año mínimo y máximo de ocurrencia
 min(sp$year)
 max(sp$year)
 
@@ -52,11 +52,10 @@ sp <- sp %>%
   )
 
 
-# 4. SE DEFINE EL GENERO DE ESTUDIO
+# 4. SE DEFINE EL GÉNERO DE ESTUDIO
 genus_name <- "Atelopus"
 
 # 5.REGIÓN DE TRABAJO
-
 countries <- ne_countries(
   country = c(
     "Colombia",
@@ -88,9 +87,7 @@ labels$Y[labels$admin == "Peru"] <- -3.0
 map_xlim <- c(-82, -65)
 map_ylim <- c(-5, 15)
 
-
 # 8. DESCARGAR LA ELEVACIÓN
-
 bbox_area <- st_as_sf(
   st_sfc(
     st_polygon(
@@ -109,7 +106,6 @@ bbox_area <- st_as_sf(
 )
 
 # 9. DESCARGAR MODELO DIGITAL DE ELEVACIÓN (DEM)
-
 dem_raster <- get_elev_raster(
   locations = bbox_area,
   z = 6,
@@ -131,8 +127,6 @@ col_dem <- terra::rast("Raster/Atelopus.tif")
 col_dem[col_dem < 0] <- NA
 
 # 10. CONSTRUCCIÓN DEL MAPA (ggplot2)
-# ------------------------------------------------------------------------------
-
 map_plot <- ggplot() +
   
   # CAPA 1: MODELO DIGITAL DE ELEVACIÓN
@@ -178,7 +172,7 @@ map_plot <- ggplot() +
       x = X,
       y = Y,
       label = name_es,
-      fontface = ifelse(admin == "Colombia", "bold", "italic"), # Negrilla para Colombia y cursiva para los demas
+      fontface = ifelse(admin == "Colombia", "bold", "italic"), # Negrilla para Colombia y cursiva para los demás
     )
   ) +
   
@@ -228,7 +222,7 @@ map_plot <- ggplot() +
 print(map_plot)
 
 
-# EXPORTAR EL MAPA
+# 11. EXPORTAR EL MAPA
 ggsave(
   filename = "Mapas/mapa_Distribucion_Atelopus.png",
   plot = map_plot,
